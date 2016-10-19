@@ -26,7 +26,15 @@ SUBDIR=asn1ate
 BINS=asn2quickder
 LIBS=__init__ parser sema support/pygen
 
-all: $(foreach lib,$(LIBS),$(SUBDIR)/$(lib).pyc)
+all: asn2quickder.destdir asn2quickder $(foreach lib,$(LIBS),$(SUBDIR)/$(lib).pyc)
+
+asn2quickder.destdir:
+	( echo '#!/bin/sh' ; echo 'PYTHONPATH='"'"'$(DESTDIR)/$(PREFIX)/lib/asn2quickder:$$PYTHONPATH'"'"' python '"'"'$(DESTDIR)/$(PREFIX)/lib/asn2quickder/asn1ate/asn2quickder.py'"'"' "$$@"' ) > "$@"
+	chmod ugo+x "$@"
+
+asn2quickder:
+	( echo '#!/bin/sh' ; echo 'HERE=$$(dirname "$$0")' ; echo 'PYTHONPATH="$$HERE:$$PYTHONPATH" python "$$HERE/asn1ate/asn2quickder.py" "$$@"' ) > "$@"
+	chmod ugo+x "$@"
 
 %.pyc: %.py
 	PYTHONPATH=$(SUBDIR)/..:$(PYTHONPATH) python -c 'import asn1ate.$(basename $(subst /,.,$(subst $(SUBDIR)/,,$<)))'
@@ -37,14 +45,14 @@ all: $(foreach lib,$(LIBS),$(SUBDIR)/$(lib).pyc)
 clean:
 	rm -f $(foreach lib,$(LIBS),$(SUBDIR)/$(lib).pyc)
 	rm -f $(foreach lib,$(LIBS),$(SUBDIR)/$(lib).pyo)
+	rm -f asn2quickder.destdir asn2quickder
 
 install: all
 	mkdir -p '$(DESTDIR)/$(PREFIX)/lib/asn2quickder/asn1ate/support'
 	$(foreach file,$(LIBS),install $(SUBDIR)/$(file).py  '$(DESTDIR)$(PREFIX)/lib/asn2quickder/asn1ate/$(file).py'  &&) echo 'Python library files installed'
 	$(foreach file,$(LIBS),install $(SUBDIR)/$(file).pyc '$(DESTDIR)$(PREFIX)/lib/asn2quickder/asn1ate/$(file).pyc' &&) echo 'Python optimised library files installed'
 	$(foreach file,$(BINS),install $(SUBDIR)/$(file).py  '$(DESTDIR)$(PREFIX)/lib/asn2quickder/asn1ate/$(file).py'  &&) echo 'Python binary files installed'
-	( echo '#!/bin/sh' ; echo 'PYTHONPATH='"'"'$(DESTDIR)/$(PREFIX)/lib/asn2quickder:$(PYTHONPATH)'"'"' python '"'"'$(DESTDIR)/$(PREFIX)/lib/asn2quickder/asn1ate/asn2quickder.py'"'"' "$$@"' ) > '$(DESTDIR)$(PREFIX)/bin/asn2quickder'
-	chmod ugo+x '$(DESTDIR)$(PREFIX)/bin/asn2quickder'
+	install asn2quickder.destdir '$(DESTDIR)$(PREFIX)/bin/asn2quickder'
 
 uninstall:
 	rm -f '$(DESTDIR)$(PREFIX)/bin/asn2quickder'
