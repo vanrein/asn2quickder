@@ -1,7 +1,0 @@
-Test DEFINITIONS ::=
-BEGIN
-  value OCTET STRING ::= '0101010'B
-
-  -- Whitespace is ignored in binary strings
-  whitespace OCTET STRING ::= '1 1	0'B
-END
